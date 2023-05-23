@@ -2,6 +2,8 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
+![Screenshot of Hourly UV Index Card](screenshot.png)
+
 ## Options
 
 | Name              | Type    | Requirement  | Description                                 | Default             |
