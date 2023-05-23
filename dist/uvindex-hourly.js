@@ -12,6 +12,15 @@ function hourStart() {
   return d;
 }
 
+
+const SCALE_COLORS = ['#6c49C9','#d90011','#f95901', '#f7e401','#299501'];
+const SCALE_WORDS = ["EXTREME","V HIGH","HIGH","MOD","LOW"];
+const SCALE_THRESHOLDS = [10,7,5,2,0];
+
+function uv_index_color(uv_index) {
+  return SCALE_COLORS[SCALE_THRESHOLDS.findIndex(t => t <= uv_index)];
+}
+
 class UvindexHourly extends LitElement {
   static properties = {
     _state: {state: true},
@@ -19,8 +28,6 @@ class UvindexHourly extends LitElement {
 };
   
   chartConfig() {
-    let scaleColors = ['#6c49C9','#d90011','#f95901', '#f7e401','#299501'];
-    let scaleWords = ["EXTREME","V HIGH","HIGH","MOD","LOW"];
     return {
           plugins: [ChartDataLabels],
           type: 'bar',
@@ -28,7 +35,7 @@ class UvindexHourly extends LitElement {
             datasets: [{
               data: [],
               backgroundColor: [],
-              barPercentage: 3,
+              barPercentage: 1,
               categoryPercentage: 1,
               fill: 'origin',
               datalabels: {
@@ -36,27 +43,21 @@ class UvindexHourly extends LitElement {
               }
             },
             {
-              data: [],
-              backgroundColor: scaleColors,
-              barPercentage: 2,
-              datalabels: {
-                formatter: (v,c) => scaleWords[c.dataIndex],
-                color: scaleColors,
-                align: '45',
-                anchor: 'end'
-              }
-            },
-            {
-              data: [],
-              backgroundColor: ["#6666FF"],
-              datalabels: {
-                display: false
-              }
+              data: [{x:1, y: 12},{x:1, y: 10},{x:1, y: 7},{x:1, y: 5},{x:1, y: 2}],
+              backgroundColor: SCALE_COLORS,
+              barThickness: 2,
+              xAxisID: 'xScale'
             }]
           },
           options: {
+            maintainAspectRatio: false,
             layout: {
-                padding: 0
+                padding: {
+                  top: 0,
+                  bottom: -10,
+                  left: 0,
+                  right: 0
+                }
             },
             plugins: {
               legend: {
@@ -70,21 +71,22 @@ class UvindexHourly extends LitElement {
               },
               annotation: {
                 annotations: {
-                  dailyMax: {
+                  keyFigures: {
                     type: 'label',
                     content: [],
                     xValue: 0,
-                    yValue: 10,
-                    position: 'end',
-                    color: "#C8CACE"
+                    yValue: 12,
+                    position: {x: 'end', y: 'start'},
+                    textAlign: 'right',
+                    color: "#C8CACE",
+                    padding: 0,
                   },
-                  current: {
-                    type: 'label',
-                    content: [],
-                    xValue: 0,
-                    yValue: 7,
-                    position: 'end',
-                    color: "#C8CACE"
+                  now: {
+                    type: 'line',
+                    borderColor: "#9999FF",
+                    borderWidth: 3,
+                    scaleID: 'x',
+                    value: () => new Date()
                   }
                 }
               }
@@ -101,25 +103,37 @@ class UvindexHourly extends LitElement {
                 },
                 type: 'time',
                 time: {
-                  unit: 'second',
+                  unit: 'hour',
                   displayFormats: {
                     second: 'ha'
                   }
                 },
                 grid: {
                   display: false
+                },
+                ticks: {
+                  maxRotation: 0,
+                  minRotation: 0,
+                  padding: 0,
                 }
               },
               y: {
+                max: 12,
                 title: {
                   text: "UV INDEX",
                   display: true,
+                  padding: 0
+                },
+                ticks: {
                   padding: 0
                 },
                 beginAtZero: true,
                 grid: {
                   display: false
                 }
+              },
+              xScale: {
+                offset: false,
               }
             }
           }
@@ -129,22 +143,34 @@ class UvindexHourly extends LitElement {
   hydrateChartConfig(chartConfig) {
     const forecast = this._state.attributes['forecast'];
     const data_points = forecast.map(f => {return {x: f.datetime, y: f.uv_index}});
-    const background_colors = forecast.map(f => f.uv_index >= 11 ? '#6c49C9' : f.uv_index >= 8 ? '#d90011': f.uv_index >= 6 ? '#f95901': f.uv_index >= 3 ? '#f7e401': '#299501');
+    const min_time = forecast[0].datetime;
+    const max_time = forecast[forecast.length-1].datetime;
+    const background_colors = forecast.map(f => uv_index_color(f.uv_index));
     chartConfig.data.datasets[0].data.length = 0;
     chartConfig.data.datasets[0].data.push(...data_points);
     chartConfig.data.datasets[0].backgroundColor.length = 0;
     chartConfig.data.datasets[0].backgroundColor.push(...background_colors);
-    let zero_x = data_points[0].x;
-    chartConfig.data.datasets[1].data.length = 0;
-    chartConfig.data.datasets[1].data.push({x:zero_x, y: 12},{x:zero_x, y: 10},{x:zero_x, y: 7},{x:zero_x, y: 5},{x:zero_x, y: 2});
-    chartConfig.data.datasets[2].data.length = 0;
-    chartConfig.data.datasets[2].data.push({x:hourStart(), y: 12});
-    chartConfig.options.plugins.annotation.annotations.dailyMax.xValue = data_points[data_points.length-1].x;
-    chartConfig.options.plugins.annotation.annotations.dailyMax.content = ['DAY MAX: '+ this._state.state];
+    if(this.offsetWidth>300) {
+      chartConfig.data.datasets[1].datalabels = {
+        formatter: (v,c) => SCALE_WORDS[c.dataIndex],
+        color: SCALE_COLORS,
+        align: '45',
+        anchor: 'end'
+      };
+      chartConfig.options.scales.x.title.display = true;
+      chartConfig.options.scales.y.title.display = true;
+    } else {
+      chartConfig.data.datasets[1].datalabels = {
+        display: false
+      };
+      chartConfig.options.scales.x.title.display = false;
+      chartConfig.options.scales.y.title.display = false;
+    }
     let forecastNow = forecast.find(f => (new Date(f.datetime)).getTime()>=hourStart().getTime());
     let UVNow = forecastNow === undefined ? 0 : forecastNow.uv_index;
-    chartConfig.options.plugins.annotation.annotations.current.xValue = data_points[data_points.length-1].x;
-    chartConfig.options.plugins.annotation.annotations.current.content = ['NOW: '+ UVNow];
+    chartConfig.options.plugins.annotation.annotations.keyFigures.xValue = max_time;
+    chartConfig.options.plugins.annotation.annotations.keyFigures.content = ['DAY MAX: '+ this._state.state, 'NOW: '+ UVNow];
+    chartConfig.options.plugins.annotation.annotations.now.display = new Date() > min_time && new Date() > max_time;
   }
 
   set hass(hass) {
@@ -183,9 +209,9 @@ class UvindexHourly extends LitElement {
 
   render() {
     return html`
-      <ha-card header="Hourly UV Index">
-        <div style="height:200px;width:300px" class="card-content">
-          <canvas style="height:200px;width:300px" id="uv-index"></canvas>
+      <ha-card style="height:100%">
+        <div style="height:100%;box-sizing: border-box;" class="card-content">
+          <canvas id="uv-index"></canvas>
         </div>
       </ha-card>
       `;
