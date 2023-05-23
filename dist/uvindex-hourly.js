@@ -170,7 +170,7 @@ class UvindexHourly extends LitElement {
     let UVNow = forecastNow === undefined ? 0 : forecastNow.uv_index;
     chartConfig.options.plugins.annotation.annotations.keyFigures.xValue = max_time;
     chartConfig.options.plugins.annotation.annotations.keyFigures.content = ['DAY MAX: '+ this._state.state, 'NOW: '+ UVNow];
-    chartConfig.options.plugins.annotation.annotations.now.display = new Date() > min_time && new Date() > max_time;
+    chartConfig.options.plugins.annotation.annotations.now.display = new Date().getTime() > new Date(min_time).getTime() && new Date().getTime() < new Date(max_time).getTime();
   }
 
   set hass(hass) {
