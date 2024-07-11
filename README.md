@@ -12,9 +12,9 @@
 
 2. Navigate to the HACS add-on. Go to "Frontend", if HACS has separate pages for Integrations and Frontend.
 
-2. Via the "..." menu at the top right, select "Custom repositories" and add https://github.com/davidn/uvindex-hourly as type "Plugin".
+2. Via the "..." menu at the top right, select "Custom repositories" and add https://github.com/davidn/uvindex-hourly as type "Lovelace" (or "Plugin", if you are on older HACS versions).
 
-3. If there is a "Explore & download respositories" button, click on it and find the "Hourly UV Index Card" plugin. If you directly see a list of plugins, find the "Hourly UV Index Card" plugin (you may need to clear filters to see integrations that haven't been downloaded). Click on the plugin and then click "Download".
+3. If there is a "Explore & download respositories" button, click on it and find "Hourly UV Index Card". If you directly see a list of cards, find "Hourly UV Index Card" (you may need to clear filters to see integrations that haven't been downloaded). Click on it and then click "Download".
 
 4. When you are prompted to reload the frontend, do so.
 
